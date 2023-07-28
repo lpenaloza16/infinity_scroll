@@ -1,46 +1,60 @@
 const imageContainer = document.getElementById("image-container");
 const loader = document.getElementById("loader");
 
+let ready = false;
+let imagesLoaded = 0;
+let totalImages = 30;
 let photoArray = [];
 
 //Unsplash API
-const count = 10;
-const apiKey = `Jqb8XX2NExXP5f-H9lyRhhCfNJrtN_HeNV8ca95TGpk`;
-const apiUrl = `https://api.unsplash.com/photos/random/?client_id=${apiKey}&count=${count}`;
+const count = 30;
+const apiUrl = "YOUR_API_URL";
+const apiKey = "YOUR_API_KEY";
 
-//Helper Functions
+let imageLoadedCount = 0; // Renamed from imageLoaded to avoid conflict with function
+
+function imageLoaded() {
+  // Image has finished loading
+  console.log("images loaded");
+  imageLoadedCount++;
+  console.log(imageLoadedCount);
+  if (imageLoadedCount === totalImages) {
+    ready = true;
+    loader.hidden = true;
+    console.log("ready =", ready);
+  }
+}
+
 function setAttribute(element, attributes) {
   for (const key in attributes) {
     element.setAttribute(key, attributes[key]);
   }
 }
 
-// Get photos from Unsplash API
 function displayPhotos() {
+  imageLoadedCount = 0; // Reset the count each time new photos are displayed
+  totalImages = photoArray.length;
+  console.log("total images", totalImages);
   photoArray.forEach((photo) => {
     const item = document.createElement("a");
-
     setAttribute(item, {
       href: photo.links.html,
       target: "_blank",
     });
-    // create <img> for photo
-    const img = document.createElement("img");
-    // img.setAttribute("src", photo.urls.regular);
-    // img.setAttribute("alt", photo.alt_description);
-    // img.setAttribute("title", photo.alt_description);
 
+    const img = document.createElement("img");
     setAttribute(img, {
       src: photo.urls.regular,
       alt: photo.alt_description,
       title: photo.alt_description,
     });
-    // Put <img> inside <a> then put both inside image_container element
+
+    img.addEventListener("load", imageLoaded);
+
     item.appendChild(img);
     imageContainer.appendChild(item);
   });
 }
-// Create Elements For Links and Photos
 
 async function getPhotos() {
   try {
@@ -48,23 +62,18 @@ async function getPhotos() {
     photoArray = await response.json();
     displayPhotos();
   } catch (error) {
-    //catch error
-    console.log(`fix it`);
+    console.error("An error occurred while fetching photos", error);
   }
 }
 
-// Check to see if scrolling near bottom og page, load more photos
-
 window.addEventListener("scroll", () => {
   if (
-    window.innerHeight + window.scrollY >=
-    document.body.offsetHeight - 1000
+    window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000 &&
+    ready
   ) {
+    ready = false;
     getPhotos();
-    console.log("test");
   }
 });
-
-// On load
 
 getPhotos();
